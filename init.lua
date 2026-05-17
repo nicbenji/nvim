@@ -106,12 +106,26 @@ do
   -- NOTE: You can change these options as you wish!
   --  For more options, you can see `:help option-list`
 
+  --  Disable providers
+  vim.g.loaded_perl_provider = 0
+  vim.g.loaded_ruby_provider = 0
+  vim.g.loaded_node_provider = 0
+  vim.g.loaded_python_provider = 0
+  vim.g.loaded_python3_provider = 0
+
   -- Make line numbers default
   vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
+  vim.o.relativenumber = true
   --  Experiment for yourself to see if you like it!
-  -- vim.o.relativenumber = true
+  -- vim.opt.relativenumber = true
 
+  --indents
+  vim.o.tabstop = 4
+  vim.o.softtabstop = 4
+  vim.o.shiftwidth = 4
+  vim.o.expandtab = true
+  vim.o.smartindent = true
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
 
@@ -127,21 +141,21 @@ do
   -- Enable break indent
   vim.o.breakindent = true
 
-  -- Enable undo/redo changes even after closing and reopening a file
+  -- Save undo history
   vim.o.undofile = true
+
+  vim.o.wrap = false
+
+  vim.o.swapfile = false
+  vim.o.backup = false
 
   -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
   vim.o.ignorecase = true
   vim.o.smartcase = true
+  vim.o.incsearch = true
 
   -- Keep signcolumn on by default
   vim.o.signcolumn = 'yes'
-
-  -- Decrease update time
-  vim.o.updatetime = 250
-
-  -- Decrease mapped sequence wait time
-  vim.o.timeoutlen = 300
 
   -- Configure how new splits should be opened
   vim.o.splitright = true
@@ -150,11 +164,6 @@ do
   -- Sets how neovim will display certain whitespace characters in the editor.
   --  See `:help 'list'`
   --  and `:help 'listchars'`
-  --
-  --  Notice listchars is set using `vim.opt` instead of `vim.o`.
-  --  It is very similar to `vim.o` but offers an interface for conveniently interacting with tables.
-  --   See `:help lua-options`
-  --   and `:help lua-guide-options`
   vim.o.list = true
   vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
@@ -164,13 +173,25 @@ do
   -- Show which line your cursor is on
   vim.o.cursorline = true
 
-  -- Minimal number of screen lines to keep above and below the cursor.
-  vim.o.scrolloff = 10
-
   -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
   -- instead raise a dialog asking if you wish to save the current file(s)
   -- See `:help 'confirm'`
   vim.o.confirm = true
+
+  -- Minimal number of screen lines to keep above and below the cursor.
+  vim.o.scrolloff = 10
+  vim.o.signcolumn = 'yes'
+  vim.opt.isfname:append '@-@'
+  -- Set both relative and absolute line nr
+  -- vim.o.statuscolumn = '%s %l %r'
+
+  vim.o.termguicolors = true
+  vim.o.colorcolumn = '80'
+  -- Decrease update time
+  vim.o.updatetime = 250
+
+  -- Decrease mapped sequence wait time
+  vim.o.timeoutlen = 300
 
   -- [[ Basic Keymaps ]]
   --  See `:help vim.keymap.set()`
@@ -178,6 +199,85 @@ do
   -- Clear highlights on search when pressing <Esc> in normal mode
   --  See `:help hlsearch`
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+  -- Diagnostic keymaps
+  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open [d]iagnostic [Q]uickfix list' })
+
+  -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
+  -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
+  -- is not what someone will guess without a bit more experience.
+  --
+  -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
+  -- or just use <C-\><C-n> to exit terminal mode
+  vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+
+  -- TIP: Disable arrow keys in normal mode
+  vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+  vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+  vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+  vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+
+  -- Keybinds to make split navigation easier.
+  --  Use CTRL+<hjkl> to switch between windows
+  --
+  --  See `:help wincmd` for a list of all window commands
+  vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+  vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+  vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+  vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+  -- [[ Basic Autocommands ]]
+  --  See `:help lua-guide-autocommands`
+
+  -- Highlight when yanking (copying) text
+  --  Try it with `yap` in normal mode
+  --  See `:help vim.highlight.on_yank()`
+  vim.api.nvim_create_autocmd('TextYankPost', {
+    desc = 'Highlight when yanking (copying) text',
+    group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
+    callback = function() vim.hl.on_yank() end,
+  })
+
+  -- move highlighted statements without moving other code
+  vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
+  vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
+
+  -- append next line without cursor moving right
+  vim.keymap.set('n', 'J', 'mzJ`z')
+  -- jump half page with cursor in middle
+  vim.keymap.set('n', '<C-d>', '<C-d>zz')
+  vim.keymap.set('n', '<C-u>', '<C-u>zz')
+  -- search stays in middle
+  vim.keymap.set('n', 'n', 'nzzzv')
+  vim.keymap.set('n', 'N', 'Nzzzv')
+  vim.keymap.set('n', '<leader>zig', '<cmd>LspRestart<cr>')
+
+  -- makes pasting in vim normal
+  vim.keymap.set('x', '<leader>p', [["_dP]])
+
+  -- switch projects with Ctrl-f
+  vim.keymap.set('n', '<C-f>', '<cmd>silent !tmux neww tmux-sessionizer<CR>')
+  vim.keymap.set('n', '<leader>f', vim.lsp.buf.format)
+  -- quick fix navigation
+  vim.keymap.set('n', '<C-k>', '<cmd>cnext<CR>zz')
+  vim.keymap.set('n', '<C-j>', '<cmd>cprev<CR>zz')
+  vim.keymap.set('n', '<leader>k', '<cmd>lnext<CR>zz')
+  vim.keymap.set('n', '<leader>j', '<cmd>lprev<CR>zz')
+  -- replace selected word
+  vim.keymap.set('n', '<leader>s', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
+  -- make executable from vim
+  vim.keymap.set('n', '<leader>x', '<cmd>!chmod +x %<CR>', { silent = true })
+
+  vim.keymap.set('n', '<leader>ee', 'oif err != nil {<CR>}<Esc>Oreturn err<Esc>')
+
+  vim.keymap.set('n', '<leader>ea', 'oassert.NoError(err, "")<Esc>F";a')
+
+  vim.keymap.set('n', '<leader>el', 'oif err != nil {<CR>}<Esc>O.logger.Error("error", "error", err)<Esc>F.;i')
+  -- source file
+  vim.keymap.set('n', '<leader><leader>', function() vim.cmd 'so' end)
+
+  -- TMUX Sessionizer
+  vim.keymap.set('n', '<C-f>', '<cmd>silent !tmux neww $HOME/setup/runs/tmux-sessionizer.sh<CR>')
 
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
@@ -202,49 +302,6 @@ do
       end,
     },
   }
-
-  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
-  -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
-  -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
-  -- is not what someone will guess without a bit more experience.
-  --
-  -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
-  -- or just use <C-\><C-n> to exit terminal mode
-  vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
-  -- TIP: Disable arrow keys in normal mode
-  -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
-  -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
-  -- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
-  -- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
-  -- Keybinds to make split navigation easier.
-  --  Use CTRL+<hjkl> to switch between windows
-  --
-  --  See `:help wincmd` for a list of all window commands
-  vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-  vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-  vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-  vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
-  -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
-  -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
-  -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
-  -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
-  -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
-
-  -- [[ Basic Autocommands ]]
-  --  See `:help lua-guide-autocommands`
-
-  -- Highlight when yanking (copying) text
-  --  Try it with `yap` in normal mode
-  --  See `:help vim.hl.on_yank()`
-  vim.api.nvim_create_autocmd('TextYankPost', {
-    desc = 'Highlight when yanking (copying) text',
-    group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
-    callback = function() vim.hl.on_yank() end,
-  })
 end
 
 -- ============================================================
@@ -373,7 +430,7 @@ do
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
-      { 'gr', group = 'LSP Actions', mode = { 'n' } },
+      { '<leader>v', group = 'LSP Actions', mode = { 'n' } },
     },
   }
 
@@ -394,7 +451,7 @@ do
   -- Load the colorscheme here.
   -- Like many other themes, this one has different styles, and you could load
   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  vim.cmd.colorscheme 'tokyonight-night'
+  vim.cmd.colorscheme 'tokyonight-storm'
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
@@ -525,29 +582,29 @@ do
       local buf = event.buf
 
       -- Find references for the word under your cursor.
-      vim.keymap.set('n', 'grr', builtin.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
+      vim.keymap.set('n', '<leader>vr', builtin.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
 
       -- Jump to the implementation of the word under your cursor.
       -- Useful when your language has ways of declaring types without an actual implementation.
-      vim.keymap.set('n', 'gri', builtin.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
+      vim.keymap.set('n', '<leader>vI', builtin.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
 
       -- Jump to the definition of the word under your cursor.
       -- This is where a variable was first declared, or where a function is defined, etc.
       -- To jump back, press <C-t>.
-      vim.keymap.set('n', 'grd', builtin.lsp_definitions, { buffer = buf, desc = '[G]oto [D]efinition' })
+      vim.keymap.set('n', '<leader>vd', builtin.lsp_definitions, { buffer = buf, desc = '[G]oto [D]efinition' })
 
       -- Fuzzy find all the symbols in your current document.
       -- Symbols are things like variables, functions, types, etc.
-      vim.keymap.set('n', 'gO', builtin.lsp_document_symbols, { buffer = buf, desc = 'Open Document Symbols' })
+      vim.keymap.set('n', '<leader>vS', builtin.lsp_document_symbols, { buffer = buf, desc = 'Open Document Symbols' })
 
       -- Fuzzy find all the symbols in your current workspace.
       -- Similar to document symbols, except searches over your entire project.
-      vim.keymap.set('n', 'gW', builtin.lsp_dynamic_workspace_symbols, { buffer = buf, desc = 'Open Workspace Symbols' })
+      vim.keymap.set('n', '<leader>vW', builtin.lsp_dynamic_workspace_symbols, { buffer = buf, desc = 'Open Workspace Symbols' })
 
       -- Jump to the type of the word under your cursor.
       -- Useful when you're not sure what type a variable is and you want to see
       -- the definition of its *type*, not where it was *defined*.
-      vim.keymap.set('n', 'grt', builtin.lsp_type_definitions, { buffer = buf, desc = '[G]oto [T]ype Definition' })
+      vim.keymap.set('n', '<leader>vt', builtin.lsp_type_definitions, { buffer = buf, desc = '[G]oto [T]ype Definition' })
     end,
   })
 
@@ -632,15 +689,15 @@ do
 
       -- Rename the variable under your cursor.
       --  Most Language Servers support renaming across files, etc.
-      map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
+      map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
 
       -- Execute a code action, usually your cursor needs to be on top of an error
       -- or a suggestion from your LSP for this to activate.
-      map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+      map('<leader>ca', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
 
       -- WARN: This is not Goto Definition, this is Goto Declaration.
       --  For example, in C this would take you to the header.
-      map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+      map('<leader>vD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
       -- The following two autocommands are used to highlight references of the
       -- word under your cursor when your cursor rests there for a little while.
@@ -695,7 +752,70 @@ do
     --    https://github.com/pmizio/typescript-tools.nvim
     --
     -- But for many setups, the LSP (`ts_ls`) will work just fine
-    -- ts_ls = {},
+
+    clangd = {},
+    gopls = {},
+    pyright = {},
+    cssls = {},
+    html = {},
+    -- csharp_ls = {},
+    emmet_language_server = {
+      filetypes = {
+        'css',
+        'html',
+        'javascript',
+        'javascriptreact',
+        'sass',
+        'scss',
+        'typescript',
+        'typescriptreact',
+      },
+    },
+    jdtls = {},
+    -- gleam = {},
+
+    -- rust_analyzer = {},
+    -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
+    --
+    -- Some languages (like typescript) have entire language plugins that can be useful:
+    --    https://github.com/pmizio/typescript-tools.nvim
+    --
+    -- But for many setups, the LSP (`ts_ls`) will work just fine
+    ts_ls = {},
+    tinymist = {
+      settings = {
+        formatterMode = 'typstyle',
+        exportPdf = 'onType',
+        semanticTokens = 'disable',
+      },
+      on_attach = function(client, bufnr)
+        vim.keymap.set(
+          'n',
+          '<leader>Tmp',
+          function()
+            client:exec_cmd({
+              title = 'pin',
+              command = 'tinymist.pinMain',
+              arguments = { vim.api.nvim_buf_get_name(0) },
+            }, { bufnr = bufnr })
+          end,
+          { desc = '[T]iny[m]ist [p]in', noremap = true }
+        )
+
+        vim.keymap.set(
+          'n',
+          '<leader>Tmu',
+          function()
+            client:exec_cmd({
+              title = 'unpin',
+              command = 'tinymist.pinMain',
+              arguments = { vim.v.null },
+            }, { bufnr = bufnr })
+          end,
+          { desc = '[T]iny[m]ist [u]npin', noremap = true }
+        )
+      end,
+    },
 
     stylua = {}, -- Used to format Lua code
 
@@ -754,14 +874,20 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
+    'java-debug-adapter',
+    'java-test',
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
   for name, server in pairs(servers) do
-    vim.lsp.config(name, server)
-    vim.lsp.enable(name)
+    if name ~= 'jdtls' then
+      vim.lsp.config(name, server)
+      vim.lsp.enable(name)
+    end
   end
+
+  vim.lsp.enable 'gleam'
 end
 
 -- ============================================================
@@ -776,8 +902,12 @@ do
     format_on_save = function(bufnr)
       -- You can specify filetypes to autoformat on save here:
       local enabled_filetypes = {
-        -- lua = true,
-        -- python = true,
+        lua = true,
+        python = true,
+        js = true,
+        ts = true,
+        html = true,
+        css = true,
       }
       if enabled_filetypes[vim.bo[bufnr].filetype] then
         return { timeout_ms = 500 }
@@ -790,12 +920,31 @@ do
     },
     -- You can also specify external formatters in here.
     formatters_by_ft = {
+      java = { 'clang-format' },
+      c = { 'clang-format' },
+      cpp = { 'clang-format' },
+      javascript = { 'prettierd' },
+      typescript = { 'prettierd' },
+      html = { 'prettierd' },
+      css = { 'prettierd' },
+      python = { 'isort', 'black' },
+      gleam = { 'gleam_format' },
       -- rust = { 'rustfmt' },
-      -- Conform can also run multiple formatters sequentially
-      -- python = { "isort", "black" },
       --
       -- You can use 'stop_after_first' to run the first available formatter from the list
       -- javascript = { "prettierd", "prettier", stop_after_first = true },
+    },
+    formatters = {
+      clang_format = {
+        command = 'clang-format',
+        args = { '--style=file', '-' },
+        stdin = true,
+      },
+      gleam_format = {
+        command = 'gleam',
+        args = { 'format', '--stdin' }, -- requires gleam >= 0.32
+        stdin = true,
+      },
     },
   }
 
@@ -865,7 +1014,7 @@ do
     },
 
     sources = {
-      default = { 'lsp', 'path', 'snippets' },
+      default = { 'lsp', 'path', 'snippets', 'buffer' },
     },
 
     snippets = { preset = 'luasnip' },
@@ -898,7 +1047,20 @@ do
   vim.pack.add { { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' } }
 
   -- Ensure basic parsers are installed
-  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+  local parsers = {
+    'bash',
+    'c',
+    'diff',
+    'html',
+    'lua',
+    'luadoc',
+    'markdown',
+    'markdown_inline',
+    'query',
+    'vim',
+    'vimdoc',
+    'java',
+  }
   require('nvim-treesitter').install(parsers)
 
   ---@param buf integer
@@ -960,17 +1122,17 @@ do
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.autopairs'
+  require 'kickstart.plugins.debug'
+  require 'kickstart.plugins.indent_line'
+  require 'kickstart.plugins.lint'
+  require 'kickstart.plugins.autopairs'
   -- require 'kickstart.plugins.neo-tree'
-  -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
+  require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
 
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- require 'custom.plugins'
+  require 'custom.plugins'
 end
 
 -- The line beneath this is called `modeline`. See `:help modeline`
