@@ -446,6 +446,13 @@ do
     styles = {
       comments = { italic = false }, -- Disable italics in comments
     },
+    on_highlights = function(hl)
+      hl.comment = { fg = '#cbd3d4' }
+      hl.perlComment = { fg = '#cbd3d4' }
+      hl.Comment = { fg = '#cbd3d4' }
+      hl.LineNrAbove = { fg = '#e8e4d8' }
+      hl.LineNrBelow = { fg = '#e1c8e3' }
+    end,
   }
 
   -- Load the colorscheme here.
