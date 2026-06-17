@@ -3,15 +3,12 @@ vim.pack.add {
   'https://github.com/mfussenegger/nvim-jdtls',
   {
     src = 'https://github.com/elmcgill/springboot-nvim',
-    load = false,
   },
 }
 
 vim.api.nvim_create_autocmd('FileType', {
   pattern = 'java',
   callback = function()
-    vim.pack.load 'springboot-nvim'
-
     local springboot_nvim = require 'springboot-nvim'
 
     vim.keymap.set('n', '<leader>Jr', springboot_nvim.boot_run, {

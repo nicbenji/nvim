@@ -778,7 +778,6 @@ do
         'typescriptreact',
       },
     },
-    jdtls = {},
     -- gleam = {},
 
     -- rust_analyzer = {},
@@ -881,6 +880,7 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
+    'jdtls',
     'java-debug-adapter',
     'java-test',
   })
@@ -888,10 +888,8 @@ do
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
   for name, server in pairs(servers) do
-    if name ~= 'jdtls' then
-      vim.lsp.config(name, server)
-      vim.lsp.enable(name)
-    end
+    vim.lsp.config(name, server)
+    vim.lsp.enable(name)
   end
 
   vim.lsp.enable 'gleam'
