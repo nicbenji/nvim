@@ -36,6 +36,12 @@ local config = {
 
   settings = {
     java = {
+      compile = {
+        nullAnalysis = {
+          mode = 'automatic',
+        },
+      },
+
       eclipse = {
         downloadSources = true,
       },
